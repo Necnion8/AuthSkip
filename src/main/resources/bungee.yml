@@ -1,0 +1,4 @@
+name: AuthSkip
+version: @version@
+main: com.gmail.necnionch.myplugin.authskip.bungee.AuthSkip
+author: Necnion8
