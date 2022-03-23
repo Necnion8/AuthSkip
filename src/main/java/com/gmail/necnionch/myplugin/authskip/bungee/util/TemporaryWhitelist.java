@@ -1,5 +1,6 @@
-package com.gmail.necnionch.myplugin.authskip.bungee;
+package com.gmail.necnionch.myplugin.authskip.bungee.util;
 
+import com.gmail.necnionch.myplugin.authskip.bungee.AuthSkip;
 import net.md_5.bungee.api.scheduler.ScheduledTask;
 
 import java.util.HashMap;
@@ -8,8 +9,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class TemporaryWhitelist {
-    private AuthSkip pl;
-    private Map<String, ScheduledTask> list = new HashMap<>();
+    private final AuthSkip pl;
+    private final Map<String, ScheduledTask> list = new HashMap<>();
 
     public TemporaryWhitelist(AuthSkip pl) {
         this.pl = pl;

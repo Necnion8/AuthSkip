@@ -1,0 +1,11 @@
+#
+# SKIN FILE
+#   Supported: SkinsRestorer .skin File
+#   Convert From PNG: https://riflowth.github.io/SkinFile-Generator/
+#
+accounts:
+  DEBAGGER:
+    addresses:
+      - 127.0.0.1
+    custom-uuid: null
+    skin-file: null

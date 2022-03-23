@@ -1,8 +1,13 @@
-package com.gmail.necnionch.myplugin.authskip.bungee;
+package com.gmail.necnionch.myplugin.authskip.bungee.commands;
 
+import com.gmail.necnionch.myplugin.authskip.bungee.AuthSkip;
+import com.gmail.necnionch.myplugin.authskip.bungee.config.Accounts;
+import com.gmail.necnionch.myplugin.authskip.bungee.util.SkinData;
+import com.google.common.collect.Lists;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
 
@@ -78,7 +83,10 @@ public class MainCommand extends Command implements TabExecutor {
             pl.getTempList().reset(args[1]);
 
         } else if (args.length >= 1 && "list".equalsIgnoreCase(args[0])) {
-            Map<String, String> addresses = pl.getAccounts().getNameAndAddresses();
+            Map<String, String> addresses = pl.getAccounts().getEntries().stream()
+                    .filter(e -> !e.getAddresses().isEmpty())
+                    .collect(Collectors.toMap(Accounts.Entry::getName, e -> Lists.newArrayList(e.getAddresses()).get(0)));
+
             if (addresses.isEmpty() && pl.getTempList().isEmpty()) {
                 sender.sendMessage(new ComponentBuilder("許可されたプレイヤーはありません。").color(ChatColor.RED).create());
                 return;
@@ -111,20 +119,70 @@ public class MainCommand extends Command implements TabExecutor {
                 sender.sendMessage(b.create());
             }
 
+        } else if (args.length >= 1 && "reload".equalsIgnoreCase(args[0])) {
+            pl.getAccounts().load();
+            sender.sendMessage(new ComponentBuilder("設定ファイルを再読み込みしました").color(ChatColor.GREEN).create());
+
+        } else if (args.length >= 1 && "setMe".equalsIgnoreCase(args[0]) && sender instanceof ProxiedPlayer) {
+            ProxiedPlayer player = (ProxiedPlayer) sender;
+            Accounts.Entry offline = pl.getAccounts().get(player.getName());
+            if (offline != null) {
+                sender.sendMessage(new ComponentBuilder("既にオフラインモード接続に設定されています").color(ChatColor.RED).create());
+                return;
+            }
+
+            String address = player.getPendingConnection().getAddress().getHostString();
+            Accounts.Entry account = pl.getAccounts().put(player.getName(), address);
+            account.setCustomUniqueId(player.getUniqueId());
+
+            SkinData localSkin = pl.getSkinManager().getByPlayer(player);
+            String skinName = player.getUniqueId() + ".skin";
+            boolean applySkin = false;
+            if (pl.saveSkin(skinName, localSkin)) {
+                account.setSkinFileName(skinName);
+                applySkin = true;
+            }
+
+            account.save();
+            sender.sendMessage(new ComponentBuilder("オフラインモード接続に設定しました").color(ChatColor.GOLD)
+                            .append(" (オンラインUUID" + ((applySkin) ? "、スキン適用)" : ")")).color(ChatColor.GRAY).create());
+            sender.sendMessage(new ComponentBuilder("再接続することで接続が変更されます").color(ChatColor.GRAY).create());
+
+        } else if (args.length >= 2 && "generateSkin".equalsIgnoreCase(args[0]) && sender instanceof ProxiedPlayer) {
+            UUID uuid;
+            try {
+                uuid = UUID.fromString(args[1]);
+            } catch (IllegalArgumentException e) {
+                sender.sendMessage(new ComponentBuilder("UUIDを指定してください").color(ChatColor.RED).create());
+                return;
+            }
+
+            pl.getSkinManager().fetchFromMojangProfile(uuid).whenComplete((skin, error) -> {
+                if (error != null || skin == null) {
+                    sender.sendMessage(new ComponentBuilder("スキンを取得できませんでした").color(ChatColor.RED).create());
+
+                } else if (pl.saveSkin(uuid + ".skin", skin)) {
+                    sender.sendMessage(new ComponentBuilder("スキンを取得しました: " + uuid).color(ChatColor.GREEN).create());
+
+                } else {
+                    sender.sendMessage(new ComponentBuilder("スキンを取得しましたが、保存に失敗しました: " + uuid).color(ChatColor.RED).create());
+                }
+            });
+
         } else {
-            sender.sendMessage(new ComponentBuilder("/authskip <add/remove/list> [player]").color(ChatColor.RED).create());
+            sender.sendMessage(new ComponentBuilder("/authskip <add/remove/list/reload/setMe/generateSkin> [player]").color(ChatColor.RED).create());
         }
     }
 
     @Override
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
         if (args.length == 1) {
-            return Stream.of("add", "remove", "list")
+            return Stream.of("add", "remove", "list", "reload", "setme")
                     .filter(e -> e.startsWith(args[0].toLowerCase(Locale.ROOT)))
                     .collect(Collectors.toList());
         } else if (args.length == 2 && args[0].equalsIgnoreCase("remove")) {
             Set<String> entries = new HashSet<>(pl.getTempList().getWhitelistedNames());
-            entries.addAll(pl.getAccounts().getNameAndAddresses().keySet());
+            entries.addAll(pl.getAccounts().getEntries().stream().map(Accounts.Entry::getName).collect(Collectors.toSet()));
             return entries.stream()
                     .filter(e -> e.startsWith(args[1].toLowerCase(Locale.ROOT)))
                     .collect(Collectors.toList());

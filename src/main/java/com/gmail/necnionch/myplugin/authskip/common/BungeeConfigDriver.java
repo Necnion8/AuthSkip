@@ -9,12 +9,15 @@ import net.md_5.bungee.config.YamlConfiguration;
 
 import java.io.*;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class BungeeConfigDriver {
     protected Configuration config;
     private Plugin plugin;
     private String fileName;
     private String resourceFileName;
+    private String[] headerBody;
 
     public BungeeConfigDriver(Plugin plugin, String fileName, String resourceFileName) {
         this.plugin = plugin;
@@ -81,6 +84,10 @@ public class BungeeConfigDriver {
         try {
 
             try (OutputStreamWriter var13 = new OutputStreamWriter(new FileOutputStream(file), Charsets.UTF_8)) {
+                if (headerBody != null) {
+                    String header = Stream.of(headerBody).map(s -> "# " + s + "\n").collect(Collectors.joining());
+                    var13.write(header);
+                }
                 ConfigurationProvider.getProvider(YamlConfiguration.class).save(this.config, var13);
             }
             var2 = true;
@@ -98,4 +105,7 @@ public class BungeeConfigDriver {
         return true;
     }
 
+    public void setHeaderBody(String[] headerBody) {
+        this.headerBody = headerBody;
+    }
 }
