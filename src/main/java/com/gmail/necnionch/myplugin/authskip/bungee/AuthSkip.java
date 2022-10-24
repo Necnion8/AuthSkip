@@ -16,6 +16,7 @@ import net.md_5.bungee.connection.InitialHandler;
 import net.md_5.bungee.connection.LoginResult;
 import net.md_5.bungee.event.EventHandler;
 import net.md_5.bungee.event.EventPriority;
+import net.md_5.bungee.protocol.Property;
 
 import java.io.File;
 import java.io.IOException;
@@ -163,8 +164,8 @@ public final class AuthSkip extends Plugin implements Listener {
 
 
     private void applySkin(InitialHandler initial, SkinData skinData) throws ReflectiveOperationException {
-        LoginResult.Property property = new LoginResult.Property("textures", skinData.getValue(), skinData.getSignature());
-        LoginResult loginResult = new LoginResult(null, null, new LoginResult.Property[]{property});
+        Property property = new Property("textures", skinData.getValue(), skinData.getSignature());
+        LoginResult loginResult = new LoginResult(null, null, new Property[]{property});
 
         Field loginProfile = initial.getClass().getDeclaredField("loginProfile");
         loginProfile.setAccessible(true);

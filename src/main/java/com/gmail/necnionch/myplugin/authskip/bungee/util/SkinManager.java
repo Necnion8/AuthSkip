@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.connection.InitialHandler;
 import net.md_5.bungee.connection.LoginResult;
+import net.md_5.bungee.protocol.Property;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,9 +31,9 @@ public class SkinManager {
         if (loginProfile == null)
             return null;
 
-        LoginResult.Property[] properties = loginProfile.getProperties();
+        Property[] properties = loginProfile.getProperties();
         if (properties.length >= 1) {
-            LoginResult.Property property = properties[0];
+            Property property = properties[0];
             String value = property.getValue();
             String signature = property.getSignature();
             return new SkinData(value, signature);
