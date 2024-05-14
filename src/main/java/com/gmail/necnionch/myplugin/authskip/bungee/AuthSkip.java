@@ -21,8 +21,11 @@ import net.md_5.bungee.protocol.Property;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.Executor;
+import java.util.stream.Stream;
 
 
 public final class AuthSkip extends Plugin implements Listener {
@@ -59,7 +62,9 @@ public final class AuthSkip extends Plugin implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPreLogin(PreLoginEvent event) {
-        if (event.isCancelled() || event.getCancelReasonComponents() != null)
+        if (event.isCancelled() || Optional.ofNullable(event.getCancelReasonComponents())
+                .map(components -> Stream.of(components).anyMatch(Objects::nonNull))
+                .orElse(false))
             return;
 
         String playerName = event.getConnection().getName();
