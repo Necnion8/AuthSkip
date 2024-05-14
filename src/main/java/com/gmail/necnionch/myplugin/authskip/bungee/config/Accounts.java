@@ -38,7 +38,11 @@ public class Accounts extends BungeeConfigDriver {
     }
 
     public Entry put(String playerName, String address) {
-        Entry entry = new Entry(playerName, Sets.newHashSet(address), null, null);
+        return put(playerName, address, null, playerName + ".skin");
+    }
+
+    public Entry put(String playerName, String address, UUID uniqueId, String skinFileName) {
+        Entry entry = new Entry(playerName, Sets.newHashSet(address), uniqueId, skinFileName);
         entries.put(playerName, entry);
         entry.save();
         return entry;
